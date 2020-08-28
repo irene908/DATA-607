@@ -1,0 +1,40 @@
+---
+title: "Assignment_1"
+author: "Irene Jacob"
+date: "28/08/2020"
+---
+
+## Introduction
+
+This is an R Markdown document for the data that can be found in the following link.
+
+<https://projects.fivethirtyeight.com/2020-general-data/presidential_national_toplines_2020.csv>
+
+This data gives the forecast for the elections conducted in the year 2020.
+
+## Data Frame
+
+Here is a subset of the data available in the above mentioned link.
+
+```{r Poll, echo=FALSE}
+Poll <- data.frame( 
+  cycle = c("2020","2020","2020","2020","2020","2020"),
+  branch = c("President","President","President","President","President","President"),
+  model = c("polls-plus","polls-plus","polls-plus","polls-plus","polls-plus","polls-plus"),
+  modeldate = c("8/28/2020","8/27/2020","8/26/2020","8/25/2020","8/24/2020","8/23/2020"),
+  candidate_inc = c("Trump","Trump","Trump","Trump","Trump","Trump"),
+  candidate_cahl = c("Biden","Biden","Biden","Biden","Biden","Biden")
+)
+print(Poll)
+```
+
+## Conclusions
+
+From the data collected we can conclude that Biden has more chances of winning when compared to Trump. 
+Trump's chance of winning is 30 in 100 whereas Biden's chance of winning is 69 in 100
+
+
+
+
+
+
