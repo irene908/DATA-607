@@ -1,0 +1,139 @@
+---
+title: "Project 1"
+author: "Irene Jacob"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(openintro)
+library(stringr)
+library(DT)
+```
+
+# Chess Tournament
+
+In this project, you’re given a text file with chess tournament results where the information has some structure. Your job is to create an R Markdown file that generates a .CSV file (that could for example be imported into a SQL database) with the following information for all of the players:
+
+Player’s Name, Player’s State, Total Number of Points, Player’s Pre-Rating, and Average Pre Chess Rating of Opponents
+
+For the first player, the information would be:
+
+Gary Hua, ON, 6.0, 1794, 1605
+
+1605 was calculated by using the pre-tournament opponents’ ratings of 1436, 1563, 1600, 1610, 1649, 1663, 1716, and dividing by the total number of games played.
+
+If you have questions about the meaning of the data or the results, please post them on the discussion forum. Data science, like chess, is a game of back and forth…
+
+The chess rating system (invented by a Minnesota statistician named Arpad Elo) has been used in many other contexts, including assessing relative strength of employment candidates by human resource departments.
+
+You may substitute another text file (or set of text files, or data scraped from web pages) of similar or greater complexity, and create your own assignment and solution.
+
+You may work in a small team. All of your code should be in an R markdown file (and published to rpubs.com); with your data accessible for the person running the script.
+
+## Load the data
+
+The chess tournament data is loaded from the .txt file. A sample of the data loaded is shown below.
+
+The data can be accessed [**here**](https://github.com/irene908/DATA-607/blob/master/tournamentinfo.txt)
+```{r r1}
+load_txt <- readLines('tournamentinfo.txt')
+head(load_txt)
+```
+
+## Cleaning the data
+
+The data loaded has an unfriendly format so I did some cleaning on it to make it easy to work with.
+
+```{r r2}
+t0 <- 0
+t1 <- unname(str_locate_all(pattern = '\\|', load_txt[5])[[1]][1,1])
+t2 <- unname(str_locate_all(pattern = '\\|', load_txt[5])[[1]][2,1])
+t3 <- unname(str_locate_all(pattern = '\\|', load_txt[5])[[1]][3,1])
+t4 <- max(nchar(load_txt))
+```
+
+```{r r3}
+s1 <- seq(5, 196, 3)   #generate a sequence for the first group
+s2 <- seq(6, 196, 3)   #generate a sequence for the second group
+
+g1 <- load_txt[s1]     #based on first sequence first group is created
+g2 <- load_txt[s2]     #based on second sequence second group is created
+```
+
+## Extracting required fields
+
+As each field is extracted it is loaded into the dataframe.
+
+```{r r4}
+name <- substr(g1, t1+1, t2-2)
+name <- str_trim(name)
+Player_Name <- str_to_title(name)                                  #Player's Name
+
+s_raw <- substr(g2, t0, t1-1)
+State <- str_trim(s_raw)                                           #Player's State
+
+chess_data <- data.frame(Player_Name, State)
+
+point <- substr(g1, t2+1, t3-1)                                    #Player's point total
+chess_data$TotalPoints <- sprintf("%.1f", as.numeric(point))
+
+pre <- substr(g2, t1+1, t2-1)
+pre <- str_extract(pre, ': *\\d{2,}')                              #Player's pre-rating
+chess_data$PreRating <- as.integer(str_extract(pre, '\\d{2,}'))
+
+```
+
+## FInd Average Pre Rating of Oppenent
+
+I have used a function to calculate the average opponent pre rating. It uses a nested for loop.
+
+```{r r5}
+oppenent <- substr(g1, t3+1, t4)
+oppenent <- str_extract_all(oppenent, '\\b\\d{1,}')
+oppenent <- as.matrix(oppenent)
+
+calculate <- function(z, p) {
+    temp <- z[p]
+    
+    for (place in temp){
+        rate <- 0
+        c <- 0
+        for(i in place) {
+            c <- c + 1
+            rate <- rate + chess_data$PreRating[as.numeric(i)]
+        }
+        rate <- round(rate / c)
+        
+    }
+    return(rate)
+}
+
+chess_data$AvgOppPreRating <- apply(oppenent, 1, calculate)
+```
+
+## View the final data
+
+During my research I found this cool way to present the data where I can search for record I want. So trying it out here.
+
+```{r r6}
+datatable(chess_data, extensions = 'Scroller', options = list(scrollY = 300, scroller = TRUE ))
+```
+
+## Writing the final output to .csv file
+
+To see the .csv file in github click [**here**](https://github.com/irene908/DATA-607/blob/master/ChessTournament.csv)
+
+```{r r7}
+write.csv(chess_data,"ChessTournament.csv")
+```
+
+## Plotting
+
+```{r r8}
+ggplot(chess_data, aes(PreRating, AvgOppPreRating)) + geom_point(aes(color=TotalPoints)) + geom_smooth(method="lm")
+```
