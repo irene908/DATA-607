@@ -1,0 +1,131 @@
+---
+title: "Assignment 5"
+author: "Irene Jacob"
+date: "`r Sys.Date()`"
+---
+
+# Tidying and Transforming Data
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(DT)
+library(tidyverse)
+library(openintro)
+```
+
+## 1.
+
+A .csv file of the data was created and it is being loaded below.
+While loading the null fields are given "NA".
+The first column is named Airline and second column is named Status.
+
+```{r r1}
+flight <- read.table("https://raw.githubusercontent.com/irene908/DATA-607/master/Assignment%205_Delays.csv", header=TRUE, sep=",", na.strings = c("", "NA"))
+names(flight)[1] <- "Airline"
+names(flight)[2] <- "Status"
+flight
+```
+
+## 2.
+
+The empty row is deleted.
+
+```{r r2}
+flight <- flight[!apply(is.na(flight[1:7]),1,all), ]
+flight
+```
+
+## 3.
+
+Update the missing fields using the following for loop.
+
+```{r r3}
+for(i in 2:nrow(flight)) {
+  
+  if(is.na(flight$Airline[i])){
+    flight$Airline[i] <- flight$Airline[i-1]
+  }
+}
+flight
+```
+
+## 4.
+
+COnverting the "wide" data into a "long" data. To do this the gather() function of tidyr is used.
+
+```{r r4}
+long_flight <- gather(flight, "City", "Count", 3:7)
+
+datatable(long_flight, extensions = 'Scroller', options = list(scrollY = 200, scroller = TRUE ))
+```
+
+## 5.
+
+The spread() function in tidyr is applied to the Status field. 
+
+```{r r5}
+status_spread <- spread(long_flight,Status,Count)
+
+datatable(status_spread, extensions = 'Scroller', options = list(scrollY = 200, scroller = TRUE ))
+```
+
+## 6.
+
+group_by() and summarize() functions of dplyr are used to find the total number of flights that were on time by each airline.
+
+```{r r6, message=FALSE}
+overall_ontime <- status_spread %>% group_by(Airline) %>% summarize(avg_ontime = mean(`on time`))
+overall_ontime
+```
+
+## 7.
+
+Compare the per-city on-time performance for both airlines
+
+```{r r7, message=FALSE}
+per_city_ontime <- status_spread %>% group_by(Airline,City) %>% summarize(avg_ontime = mean(`on time`))
+
+datatable(per_city_ontime, extensions = 'Scroller', options = list(scrollY = 200, scroller = TRUE ))
+                                                                   
+```
+
+## 8. Plotting
+
+``` {r r8}
+ggplot(per_city_ontime ,aes(x= City, y=avg_ontime, fill=Airline)) +
+    geom_bar(stat="identity", position=position_dodge())
+```
+
+## 9. 
+
+Summarize the delay data
+
+```{r, message=FALSE}
+overall_delay <- status_spread %>% group_by(Airline) %>% summarize(avg_delay = mean(`delayed`))
+overall_delay
+
+per_city_delay <- status_spread %>% group_by(Airline,City) %>% summarize(avg_delay = mean(`delayed`))
+
+datatable(per_city_delay, extensions = 'Scroller', options = list(scrollY = 200, scroller = TRUE ))
+
+ggplot(per_city_delay ,aes(x= City, y=avg_delay, fill=Airline)) +
+    geom_bar(stat="identity", position=position_dodge())
+
+d <- status_spread %>% dplyr::group_by(Airline) %>% 
+  dplyr::summarise(d_max=max(delayed), 
+                   d_min=min(delayed),
+                   d_avg=mean(delayed),
+                   d_sd=sd(delayed),
+                   d_median=median(delayed),
+                   IQR=IQR(delayed))
+
+datatable(d, extensions = 'Scroller', options = list(scrollY = 100))
+```
+
+## Conclusion
+
+From the above analysis it is clear that AM WEST had more number of on time flights when compared to ALASKA. When we consider the on time flights in Seattle we can see that ALASKA has more on time flights compared to AM WEST.
+
+So this proves that judging an airline based on all the flights is not the best option. We should go further on to each destination to see which airline is better for that destination.
