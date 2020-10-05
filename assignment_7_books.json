@@ -1,0 +1,17 @@
+{"Favorite Books" :[ 
+	{"Name": "The Girl Who Knew Too Much",
+	 "Author": "Vikrant Khanna",
+	 "Genre": ["Fiction","Suspense"],
+	 "Year": "2017"
+	},
+	{"Name": "R for Data Science - Import, Tidy, Transform, Visualize and Model Data",
+	 "Author": ["Hadley Wickham", "Garrett Grolemund"],
+	 "Genre": ["education", "non fiction"],
+	 "Year": "2016"
+	},
+	{"Name": "Murder on the Orient express",
+	 "Author": "Agatha Christie",
+	 "Genre": ["Mystery", "Crime Fiction", "Detective fiction", "Police procedural"],
+	 "Year": "2017"
+	}]
+}
