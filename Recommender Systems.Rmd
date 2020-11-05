@@ -1,0 +1,75 @@
+---
+title: "Discussion 11"
+author: "Irene Jacob"
+date: "`r Sys.Date()`"
+---
+
+# Recommender Systems
+
+## Goal
+
+Your task is to analyze an existing recommender system that you find interesting.  You should:
+
+1.	Perform a Scenario Design analysis as described below.  Consider whether it makes sense for your selected recommender system to perform scenario design twice, once for the organization (e.g. Amazon.com) and once for the organization's customers.
+
+2.	Attempt to reverse engineer what you can about the site, from the site interface and any available information that you can find on the Internet or elsewhere.
+
+3.	Include specific recommendations about how to improve the site's recommendation capabilities going forward. 
+
+4.	Create your report using an R Markdown file, and create a discussion thread with a link to the GitHub repo where your Markdown file notebook resides.  You are not expected to need to write code for this discussion assignment.
+
+## Netflix
+
+In the late 1990s Netflix was launched with a subscription-based model that posted DVDs to the home of people in the US. Netflix launched personalised movie recommendations in 2000 and Netflix Prize in 2006. ‘Cinematch’ was the recommender system used by them back then. Historical data is not the sole base of the company. They "innovate using machine learning in many areas where we research, design, implement, evaluate, and productionize models and algorithms through both offline experiments and online A/B testing".
+
+## Scenario Design for Netflix
+
+### Who are your target users?
+
+Millions of customers who pay to get quality tv shows and movies in an online environment.
+
+### What are their key goals?
+
+A system that utilizes the machine learning features to help customers find what they are looking for quickly. The recommender system should be aware of the desires and moods of the customers when providing the suggestions.
+
+### How can you help them accomplish their goals?
+
+Based on the customers likes suggest good tv shows and movies to watch in the decreasing order of interest, ie., the best suggestions appear on top.
+
+## Scenario Design for Netflix's Customers
+
+### Who are your target users?
+
+Millions of customers looking for good entertainment.
+
+### What are their key goals?
+
+Find a good show or movie that fit to their current mood.
+
+### How can you help them accomplish their goals?
+
+Let the customers create their own categories.
+
+## Reverse Engineer
+
+Netflix uses a number of recommender systems. One of the recommender systems used by Netflix is the **Homepage Layout**.
+
+The Netflix homepage layout comprises of a set of rows. Each rows is a set of movies of the same genre. Due to the limited space the focus is to show the most relevant shows. The top rows are decided based on the A/B testing.
+
+Each row has a score associated with it and the one having the maxmum score gets to be on the top position on the screen. There are many algorithms that work simultaneously to give us the homepage that we see when we login.
+
+## Recommendations
+
+When the content present on the homepage is not what the user is looking for at present and wants to try something different there should be an option to do so.
+
+It would be great if there is an improvement on the autoplay option where the user can get a preview of the video to know what it is about.
+
+## References
+
+https://research.netflix.com/research-area/machine-learning
+
+https://towardsdatascience.com/deep-dive-into-netflixs-recommender-system-341806ae3b48
+
+https://netflixtechblog.com/learning-a-personalized-homepage-aa8ec670359a
+
+
