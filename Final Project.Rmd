@@ -1,0 +1,308 @@
+---
+title: "Final Project"
+author: "Irene Jacob"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(DT)
+library(kableExtra)
+library(tidyverse)
+library(dplyr)
+library(ggrepel)
+library(lubridate)
+```
+# New York City Shooting Rates
+
+## Purpose
+
+I will be focusing on 2 point in this project. They are as follows:
+
+**1. The location having the highest shooting rates.**
+
+**2. Analyze the crime rate in each location.**
+
+## Data Source
+
+I have 2 data sources. Both are from NYCOpenData - https://opendata.cityofnewyork.us/.
+
+1. Historic data from 2006 to 2019. This dataset is in .tsv  format. https://data.cityofnewyork.us/Public-Safety/NYPD-Shooting-Incident-Data-Historic-/833y-fsy8
+2. Data of the current year. This dataset is in .csv format. https://data.cityofnewyork.us/Public-Safety/NYPD-Shooting-Incident-Data-Year-To-Date-/5ucz-vwe8
+
+## Import the data
+
+I will read the .tsv file using read_tsv() and the .csv file using read.csv().
+
+```{r}
+shoot_current <- read.csv("https://raw.githubusercontent.com/irene908/DATA-607/master/NYPD_Shooting_Incident_Data__Year_To_Date_.csv")
+datatable(shoot_current)
+```
+
+```{r}
+shoot_historic <- read_tsv("https://raw.githubusercontent.com/irene908/DATA-607/master/NYPD_Shooting_Incident_Data__Historic_.tsv")
+datatable(shoot_historic)
+class(shoot_historic$OCCUR_TIME) = "Character"
+```
+
+## Data Preparation
+
+Clean the datasets by selecting the columns required for the analysis and removing the NA values.
+
+```{r}
+dim(shoot_current)
+dim(shoot_historic)
+```
+
+```{r}
+colnames(shoot_current)
+colnames(shoot_historic)
+```
+
+```{r}
+# Remove NAs from the data.
+sapply(shoot_current, function(x) sum(is.na(x)))
+
+sapply(shoot_historic, function(x) sum(is.na(x)))
+```
+
+## Data Analysis
+
+### Current 
+
+Count the occurrences of a borough name to give an idea of the shooting rate in the borough.
+
+```{r}
+current_borough <- table(shoot_current$BORO)
+current_borough <- as.data.frame(current_borough)
+current_borough$Percent <- round((current_borough$Freq / sum(current_borough$Freq)*100),2)
+kable(current_borough)
+
+ggplot(current_borough, aes(x=Var1, y=Freq, fill=Var1)) + geom_bar(stat="identity") + geom_text_repel(data=current_borough, aes(label=Var1))
+```
+
+```{r}
+paste("The total number of shootings in the current year is:", sum(current_borough$Freq))
+```
+
+```{r}
+#Date
+current_date <- shoot_current
+current_date$OCCUR_DATE <- as.Date(current_date$OCCUR_DATE,format = "%m/%d/%Y")
+current_date$DAY<- wday(current_date$OCCUR_DATE, label=TRUE)
+```
+
+```{r}
+#Hour
+h <- function(x) {
+  return (as.numeric(strsplit(x,":")[[1]][1]))
+}
+
+
+
+current_hour <- current_date %>%
+  mutate(HOUR = sapply(OCCUR_TIME, h)) %>%
+  group_by(DAY, HOUR) %>%
+  summarize(count = n())
+
+day <- c("Sun","Mon","Tue","Wed","Thu","Fri","Sat")
+hr <- c(paste(c(12,1:11),"AM"), paste(c(12,1:11),"PM"))
+
+current_hour$DAY <- factor(current_hour$DAY, level = rev(day))
+current_hour$HOUR <- factor(current_hour$HOUR, level = 0:23, label = hr)
+```
+
+```{r}
+#Heatmap
+ggplot(current_hour, aes(x = HOUR, y = DAY, fill = count)) +geom_tile() + theme(axis.text.x = element_text(angle = 90, vjust = 0.6), legend.title = element_blank(), legend.position="top", legend.direction="horizontal", legend.key.width=unit(2, "cm"), legend.key.height=unit(0.25, "cm"), legend.margin=unit(-0.5,"cm"), panel.margin=element_blank()) + labs(x = "HOUR", y = "DAY", title = "SHOOTING RATE") + scale_fill_gradient(low = "white", high = "BLACK")
+
+```
+
+### Historic 
+
+Count the occurrences of a borough name to give an idea of the shooting rate in the borough.
+
+```{r}
+historic_borough <- table(shoot_historic$BORO)
+historic_borough <- as.data.frame(historic_borough)
+historic_borough$Percent <- round((historic_borough$Freq / sum(historic_borough$Freq)*100),2)
+kable(historic_borough)
+
+ggplot(historic_borough, aes(x=Var1, y=Freq, fill=Var1)) + geom_bar(stat="identity") + geom_text_repel(data=historic_borough, aes(label=Var1))
+```
+
+```{r}
+paste("The total number of shootings in the historic data", sum(historic_borough$Freq))
+```
+
+## Yearly analyse of each Borough - Historic dataset 
+
+### BRONX
+
+Count the occurrences of shooting in each year in BRONX.
+
+```{r}
+B <-subset(shoot_historic, BORO=='BRONX', select=c(BORO, OCCUR_DATE))
+
+n <- 4                                # Specify number of characters to extract
+B$YEAR <- substr(B$OCCUR_DATE, nchar(B$OCCUR_DATE) - n + 1, nchar(B$OCCUR_DATE)) # Extract last three characters
+
+
+B <- subset(B, select = -c(OCCUR_DATE))
+
+BRONX <- table(B$YEAR)
+BRONX <- as.data.frame(BRONX)
+
+ggplot(data=BRONX, aes(x=Var1, y=Freq, group=1)) +
+  geom_line()+
+  geom_point()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+### BROOKLYN
+
+Count the occurrences of shooting in each year in BROOKLYN.
+
+```{r}
+Br <-subset(shoot_historic, BORO=='BROOKLYN', select=c(BORO, OCCUR_DATE))
+
+n <- 4                                # Specify number of characters to extract
+Br$YEAR <- substr(Br$OCCUR_DATE, nchar(Br$OCCUR_DATE) - n + 1, nchar(Br$OCCUR_DATE)) # Extract last three characters
+
+
+Br <- subset(Br, select = -c(OCCUR_DATE))
+
+BROOLYN <- table(Br$YEAR)
+BROOLYN <- as.data.frame(BROOLYN)
+
+ggplot(data=BROOLYN, aes(x=Var1, y=Freq, group=1)) +
+  geom_line()+
+  geom_point()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+### MANHATTAN
+
+Count the occurrences of shooting in each year in MANHATTAN.
+
+```{r}
+M <-subset(shoot_historic, BORO=='MANHATTAN', select=c(BORO, OCCUR_DATE))
+
+n <- 4                                # Specify number of characters to extract
+M$YEAR <- substr(M$OCCUR_DATE, nchar(M$OCCUR_DATE) - n + 1, nchar(M$OCCUR_DATE)) # Extract last three characters
+
+
+M <- subset(M, select = -c(OCCUR_DATE))
+
+MANHATTAN <- table(M$YEAR)
+MANHATTAN <- as.data.frame(MANHATTAN)
+
+ggplot(data=MANHATTAN, aes(x=Var1, y=Freq, group=1)) +
+  geom_line()+
+  geom_point()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+### QUEENS
+
+Count the occurrences of shooting in each year in QUEENS.
+
+```{r}
+Q <-subset(shoot_historic, BORO=='QUEENS', select=c(BORO, OCCUR_DATE))
+
+n <- 4                                # Specify number of characters to extract
+Q$YEAR <- substr(Q$OCCUR_DATE, nchar(Q$OCCUR_DATE) - n + 1, nchar(Q$OCCUR_DATE)) # Extract last three characters
+
+
+Q <- subset(Q, select = -c(OCCUR_DATE))
+
+QUEENS <- table(Q$YEAR)
+QUEENS <- as.data.frame(QUEENS)
+
+ggplot(data=QUEENS, aes(x=Var1, y=Freq, group=1)) +
+  geom_line()+
+  geom_point()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+### STATEN ISLAND
+
+Count the occurrences of shooting in each year in STATEN ISLAND.
+
+```{r}
+S <-subset(shoot_historic, BORO=='STATEN ISLAND', select=c(BORO, OCCUR_DATE))
+
+n <- 4                                # Specify number of characters to extract
+S$YEAR <- substr(S$OCCUR_DATE, nchar(S$OCCUR_DATE) - n + 1, nchar(S$OCCUR_DATE)) # Extract last three characters
+
+
+S <- subset(S, select = -c(OCCUR_DATE))
+
+STATEN_ISLAND <- table(S$YEAR)
+STATEN_ISLAND <- as.data.frame(STATEN_ISLAND)
+
+ggplot(data=STATEN_ISLAND, aes(x=Var1, y=Freq, group=1)) +
+  geom_line()+
+  geom_point()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+## Compare the dataset
+
+### Combine the borough data for current and historic dataset
+
+```{r}
+current_borough$type <- c("Current")
+historic_borough$type <- c("Historic")
+borough <- rbind(historic_borough,current_borough)
+
+ggplot(borough ,aes(x= Var1, y=Freq, fill=type)) +
+    geom_bar(stat="identity", position=position_dodge())
+
+ggplot(borough ,aes(x= Var1, y=Percent, fill=type)) +
+    geom_bar(stat="identity", position=position_dodge())
+```
+
+## CONCLUSION
+
+To conclude, I have answered both my questions from the analysis done above. The answers are as follows:
+
+**1. The location having the highest shooting rates.**
+
+When the current and historic shooting rates were analyzed I found out that BROOKLYN had the highest shooting rates always.
+
+But in the current year the percentage of shooting rate in BROOKYLN has reduced to 41.21% from the 42.37% that was present in the historic data.
+
+From the above barplots it is understood that percentage is the best option to represent the data. So from the percentage barplot it can be seen that in 'Bronx' and 'Staten Island' there is an increase in the number of shootings in the current year compared to the historic data whereas all the other boroughs saw a decrease.
+
+**2. Analyze the crime rate in each location.**
+
+*Bronx*
+
+The highest number of shootings were reported in 2006 and the lowest in 2019.
+
+*Brooklyn*
+
+The highest number of shootings were reported in 2006 and the lowest in 2017.
+
+*Manhattan*
+
+The highest number of shootings were reported in 2006 and the lowest in 2018.
+
+*Queens*
+
+The highest number of shootings were reported in 2008 and the lowest in 2017.
+
+*Staten Island*
+
+The highest number of shootings were reported in 2008 and the lowest in 2018.
+
+From these it can be seen that the shootings were more high between 2006-2008 and have reduced from 2017-2019
